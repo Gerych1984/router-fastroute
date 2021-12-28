@@ -50,7 +50,7 @@ final class UrlGenerator implements UrlGeneratorInterface
      */
     public function generate(string $name, array $parameters = []): string
     {
-        $parameters = array_map('\strval', $parameters);
+        $parameters = $this->prepareParameters($parameters);
 
         if (
             $this->localeParameterName !== null
@@ -102,7 +102,7 @@ final class UrlGenerator implements UrlGeneratorInterface
         string $scheme = null,
         string $host = null
     ): string {
-        $parameters = array_map('\strval', $parameters);
+        $parameters = $this->prepareParameters($parameters);
 
         $url = $this->generate($name, $parameters);
         $route = $this->routeCollection->getRoute($name);
@@ -293,5 +293,23 @@ final class UrlGenerator implements UrlGeneratorInterface
     {
         $shouldPrependSlash = strpos($path, '/') === 0;
         return ($shouldPrependSlash ? '/' : '') . $this->locale . '/' . ltrim($path, '/');
+    }
+
+    /**
+     * @psalm-param array<string,mixed> $parameters
+     *
+     * @psalm-return array<string,string>
+     */
+    private function prepareParameters(array $parameters): array
+    {
+        return array_map(
+            static function ($value): string {
+                if (is_array($value)) {
+                    return '';
+                }
+                return (string) $value;
+            },
+            $parameters
+        );
     }
 }
